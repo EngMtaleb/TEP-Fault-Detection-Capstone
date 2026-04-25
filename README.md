@@ -90,7 +90,7 @@ This project leverages a **Chemical Engineering background** to:
 └── dashboard/
     └── index.html    # Interactive dashboard
 ```
-
+🔗 [Live Dashboard](https://engmtaleb.github.io/TEP-Fault-Detection-Capstone/)
 ---
 
 ## 👤 Author
