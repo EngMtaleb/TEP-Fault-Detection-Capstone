@@ -1,0 +1,2003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEP Ultimate Dashboard - Professional Analytics Suite</title>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #0a0a1f;
+            --bg-secondary: #1a1a3e;
+            --card: rgba(255,255,255,0.08);
+            --text: #ffffff;
+            --text-muted: rgba(255,255,255,0.7);
+            --accent: #667eea;
+            --accent-secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, var(--bg-secondary) 50%, #2a2a5e 100%);
+            color: var(--text);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 25% 25%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1920px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .process-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .process-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .control-bar {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="number"], button {
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        select option {
+            background-color: #1a1a3e;
+            color: white;
+            padding: 5px;
+        }
+
+        select option:hover {
+            background-color: #667eea;
+        }
+
+        select:hover, input:hover, button:hover {
+            background-color: rgba(255,255,255,0.12);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        button {
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            border: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .fault-comparison {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .comparison-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .kpi-card {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .kpi-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .kpi-change {
+            font-size: 11px;
+            margin-top: 5px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .kpi-up {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .kpi-down {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .tabs-container {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 10px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .panel {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .panel-badge {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: white;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: auto;
+        }
+
+        .panel-wide {
+            grid-column: span 2;
+        }
+
+        .chart-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 15px;
+            height: 350px;
+            position: relative;
+        }
+
+        .chart-container-tall {
+            height: 520px;
+        }
+
+        canvas {
+            max-width: 100% !important;
+            height: 100% !important;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .data-table thead {
+            background: linear-gradient(135deg, #37474F, #263238);
+        }
+
+        .data-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.2);
+        }
+
+        .data-table tbody tr:hover td {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .risk-matrix {
+            display: grid;
+            grid-template-columns: auto repeat(5, 1fr);
+            gap: 8px;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+        }
+
+        .risk-cell {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .risk-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255,255,255,0.2);
+        }
+
+        .risk-header {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            cursor: default;
+        }
+
+        .risk-header:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .risk-1 { background: rgba(16, 185, 129, 0.3); }
+        .risk-2 { background: rgba(34, 197, 94, 0.4); }
+        .risk-3 { background: rgba(245, 158, 11, 0.4); }
+        .risk-4 { background: rgba(239, 68, 68, 0.4); }
+        .risk-5 { background: rgba(185, 28, 28, 0.5); }
+
+        .risk-selected {
+            border: 2px solid white !important;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+
+        .risk-fault-marker {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: white;
+            color: black;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .severity-critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .severity-high {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .severity-medium {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .severity-low {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .trends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .trend-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 15px;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trend-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 10px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .trend-chart-wrapper {
+            flex-grow: 1;
+            position: relative;
+            min-height: 0;
+            height: 140px;
+        }
+
+        .trend-item canvas {
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .panel-wide {
+                grid-column: span 1;
+            }
+            .kpi-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            .trends-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .control-bar {
+                flex-direction: column;
+            }
+            .control-group {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .trends-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>TENNESSEE EASTMAN PROCESS - ULTIMATE ANALYTICS</h1>
+            <div class="subtitle">Professional Fault Detection, RCA & Predictive Maintenance Suite v2.0</div>
+        </div>
+
+        <div class="process-section">
+            <div class="process-title">
+                🏭 TEP Process Flow Diagram
+                <span class="panel-badge" style="margin-left: auto;">Live Process View</span>
+            </div>
+            <svg id="tepDiagram" viewBox="0 0 1200 400" style="width: 100%; height: 400px; background: rgba(0,0,0,0.3); border-radius: 12px;">
+                <defs>
+                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+                    </pattern>
+                    <linearGradient id="reactorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.8" />
+                        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:0.8" />
+                    </linearGradient>
+                    <linearGradient id="separatorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#10b981;stop-opacity:0.8" />
+                        <stop offset="100%" style="stop-color:#059669;stop-opacity:0.8" />
+                    </linearGradient>
+                    <linearGradient id="condenserGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.8" />
+                        <stop offset="100%" style="stop-color:#1e40af;stop-opacity:0.8" />
+                    </linearGradient>
+                    <linearGradient id="faultGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#ef4444;stop-opacity:0.8" />
+                        <stop offset="100%" style="stop-color:#dc2626;stop-opacity:0.8" />
+                    </linearGradient>
+                </defs>
+
+                <rect width="1200" height="400" fill="url(#grid)" />
+
+                <g id="feeds">
+                    <rect x="50" y="80" width="80" height="40" rx="5" fill="#f59e0b" opacity="0.8" stroke="white" stroke-width="2"/>
+                    <text x="90" y="104" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Feed A</text>
+
+                    <rect x="50" y="140" width="80" height="40" rx="5" fill="#f59e0b" opacity="0.8" stroke="white" stroke-width="2"/>
+                    <text x="90" y="164" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Feed D</text>
+
+                    <rect x="50" y="200" width="80" height="40" rx="5" fill="#f59e0b" opacity="0.8" stroke="white" stroke-width="2"/>
+                    <text x="90" y="224" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Feed E</text>
+
+                    <rect x="50" y="260" width="80" height="40" rx="5" fill="#f59e0b" opacity="0.8" stroke="white" stroke-width="2"/>
+                    <text x="90" y="284" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Feed C</text>
+                </g>
+
+                <g id="reactor">
+                    <ellipse cx="280" cy="180" rx="70" ry="100" fill="url(#reactorGrad)" stroke="white" stroke-width="3" id="reactorShape"/>
+                    <text x="280" y="180" text-anchor="middle" fill="white" font-size="18" font-weight="bold">REACTOR</text>
+                    <text x="280" y="200" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="12">T=85.7°C</text>
+                    <text x="280" y="215" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="12">P=3102 kPa</text>
+                </g>
+
+                <g id="condenser">
+                    <rect x="440" y="120" width="120" height="80" rx="10" fill="url(#condenserGrad)" stroke="white" stroke-width="3" id="condenserShape"/>
+                    <text x="500" y="155" text-anchor="middle" fill="white" font-size="16" font-weight="bold">CONDENSER</text>
+                    <text x="500" y="175" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">Cooling Water</text>
+                </g>
+
+                <g id="separator">
+                    <ellipse cx="700" cy="180" rx="60" ry="90" fill="url(#separatorGrad)" stroke="white" stroke-width="3" id="separatorShape"/>
+                    <text x="700" y="175" text-anchor="middle" fill="white" font-size="16" font-weight="bold">SEPARATOR</text>
+                    <text x="700" y="195" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="11">L=63.65%</text>
+                </g>
+
+                <g id="stripper">
+                    <ellipse cx="700" cy="320" rx="50" ry="40" fill="#8b5cf6" opacity="0.8" stroke="white" stroke-width="3"/>
+                    <text x="700" y="325" text-anchor="middle" fill="white" font-size="15" font-weight="bold">STRIPPER</text>
+                </g>
+
+                <g id="outputs">
+                    <rect x="850" y="90" width="100" height="40" rx="5" fill="#ef4444" opacity="0.8" stroke="white" stroke-width="2"/>
+                    <text x="900" y="114" text-anchor="middle" fill="white" font-size="14" font-weight="bold">PURGE</text>
+
+                    <rect x="850" y="300" width="100" height="40" rx="5" fill="#22c55e" opacity="0.8" stroke="white" stroke-width="2"/>
+                    <text x="900" y="324" text-anchor="middle" fill="white" font-size="14" font-weight="bold">PRODUCT G/H</text>
+                </g>
+
+                <g id="streams">
+                    <line x1="130" y1="100" x2="210" y2="150" stroke="#fbbf24" stroke-width="3" opacity="0.8">
+                        <animate attributeName="stroke-dasharray" values="0 10;10 0" dur="1s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="130" y1="160" x2="210" y2="170" stroke="#fbbf24" stroke-width="3" opacity="0.8">
+                        <animate attributeName="stroke-dasharray" values="0 10;10 0" dur="1s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="130" y1="220" x2="210" y2="190" stroke="#fbbf24" stroke-width="3" opacity="0.8">
+                        <animate attributeName="stroke-dasharray" values="0 10;10 0" dur="1s" repeatCount="indefinite"/>
+                    </line>
+                    <line x1="130" y1="280" x2="210" y2="210" stroke="#fbbf24" stroke-width="3" opacity="0.8">
+                        <animate attributeName="stroke-dasharray" values="0 10;10 0" dur="1s" repeatCount="indefinite"/>
+                    </line>
+
+                    <path d="M 350 160 Q 400 140 440 160" fill="none" stroke="#60a5fa" stroke-width="3" opacity="0.8">
+                        <animate attributeName="stroke-dasharray" values="0 10;10 0" dur="1.2s" repeatCount="indefinite"/>
+                    </path>
+
+                    <path d="M 560 160 Q 620 160 640 180" fill="none" stroke="#60a5fa" stroke-width="3" opacity="0.8">
+                        <animate attributeName="stroke-dasharray" values="0 10;10 0" dur="1.2s" repeatCount="indefinite"/>
+                    </path>
+
+                    <path d="M 760 140 Q 800 110 850 110" fill="none" stroke="#f87171" stroke-width="3" opacity="0.8">
+                        <animate attributeName="stroke-dasharray" values="0 10;10 0" dur="1s" repeatCount="indefinite"/>
+                    </path>
+
+                    <line x1="700" y1="270" x2="700" y2="280" stroke="#a78bfa" stroke-width="3" opacity="0.8">
+                        <animate attributeName="stroke-dasharray" values="0 10;10 0" dur="1s" repeatCount="indefinite"/>
+                    </line>
+
+                    <path d="M 750 320 Q 800 320 850 320" fill="none" stroke="#4ade80" stroke-width="3" opacity="0.8">
+                        <animate attributeName="stroke-dasharray" values="0 10;10 0" dur="1s" repeatCount="indefinite"/>
+                    </path>
+
+                    <path d="M 650 320 Q 450 350 280 280" fill="none" stroke="#9333ea" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+                    <text x="450" y="345" fill="#9333ea" font-size="11">Recycle</text>
+                </g>
+
+                <g id="conditions">
+                    <rect x="1000" y="30" width="180" height="100" rx="5" fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                    <text x="1090" y="50" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="bold">OPERATING CONDITIONS</text>
+                    <text x="1010" y="70" fill="rgba(255,255,255,0.8)" font-size="10">Production Rate: 22.89 m³/h</text>
+                    <text x="1010" y="85" fill="rgba(255,255,255,0.8)" font-size="10">G/H Ratio: 53.8/46.2</text>
+                    <text x="1010" y="100" fill="rgba(255,255,255,0.8)" font-size="10">Steam: 3102.17 kPa</text>
+                    <text x="1010" y="115" fill="rgba(255,255,255,0.8)" font-size="10" id="statusText">Status: <tspan fill="#10b981">NORMAL</tspan></text>
+                </g>
+            </svg>
+        </div>
+
+        <div class="control-bar">
+            <div class="fault-comparison">
+                <span class="comparison-label">Compare Faults:</span>
+                <div class="control-group">
+                    <label>Primary</label>
+                    <select id="fault1" onchange="updateDashboard()">
+                        <option value="0">F0: Normal Operation</option>
+                        <option value="1">F1: A/C Feed Ratio Step Change</option>
+                        <option value="2">F2: B Composition Step</option>
+                        <option value="3">F3: D Feed Temperature Step</option>
+                        <option value="4">F4: Reactor Cooling Water Inlet Temperature</option>
+                        <option value="5">F5: Condenser Cooling Water Inlet Temperature</option>
+                        <option value="6">F6: A Feed Loss (Stream 1)</option>
+                        <option value="7">F7: C Header Pressure Loss</option>
+                        <option value="8">F8: A, B, C Feed Composition</option>
+                        <option value="9">F9: D Feed Temperature</option>
+                        <option value="10">F10: C Feed Temperature</option>
+                        <option value="11">F11: Reactor Cooling Water Temperature</option>
+                        <option value="12">F12: Condenser Cooling Water Temperature</option>
+                        <option value="13">F13: Reaction Kinetics Drift</option>
+                        <option value="14">F14: Reactor Cooling Water Valve Sticking</option>
+                        <option value="15">F15: Condenser Cooling Water Valve Sticking</option>
+                        <option value="16">F16: Unknown Fault</option>
+                        <option value="17">F17: Unknown Fault</option>
+                        <option value="18">F18: Unknown Fault</option>
+                        <option value="19">F19: Unknown Fault</option>
+                        <option value="20">F20: Unknown Fault</option>
+                        <option value="21">F21: Stream 4 Valve Fixed Position</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Secondary</label>
+                    <select id="fault2" onchange="updateDashboard()">
+                        <option value="-1">None</option>
+                        <option value="0">F0: Normal Operation</option>
+                        <option value="1">F1: A/C Feed Ratio Step Change</option>
+                        <option value="2">F2: B Composition Step</option>
+                        <option value="3">F3: D Feed Temperature Step</option>
+                        <option value="4">F4: Reactor Cooling Water Inlet Temperature</option>
+                        <option value="5">F5: Condenser Cooling Water Inlet Temperature</option>
+                        <option value="6">F6: A Feed Loss (Stream 1)</option>
+                        <option value="7">F7: C Header Pressure Loss</option>
+                        <option value="8">F8: A, B, C Feed Composition</option>
+                        <option value="9">F9: D Feed Temperature</option>
+                        <option value="10">F10: C Feed Temperature</option>
+                        <option value="11">F11: Reactor Cooling Water Temperature</option>
+                        <option value="12">F12: Condenser Cooling Water Temperature</option>
+                        <option value="13">F13: Reaction Kinetics Drift</option>
+                        <option value="14">F14: Reactor Cooling Water Valve Sticking</option>
+                        <option value="15">F15: Condenser Cooling Water Valve Sticking</option>
+                        <option value="16">F16: Unknown Fault</option>
+                        <option value="17">F17: Unknown Fault</option>
+                        <option value="18">F18: Unknown Fault</option>
+                        <option value="19">F19: Unknown Fault</option>
+                        <option value="20">F20: Unknown Fault</option>
+                        <option value="21">F21: Stream 4 Valve Fixed Position</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Mode</label>
+                <select id="modeSelect">
+                    <option value="baseline">Baseline</option>
+                    <option value="high-prod">High Prod</option>
+                    <option value="low-prod">Low Prod</option>
+                    <option value="startup">Startup</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Units</label>
+                <select id="unitSelect">
+                    <option value="SI">SI</option>
+                    <option value="US">US</option>
+                </select>
+            </div>
+            <button onclick="exportReport()">📊 Export Report</button>
+            <button onclick="resetDashboard()">🔄 Reset</button>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon">💰</div>
+                <div class="kpi-value" id="kpi-cost">$0</div>
+                <div class="kpi-label">Cost Impact</div>
+                <div class="kpi-change kpi-down" id="cost-change">Normal</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">❤️</div>
+                <div class="kpi-value" id="kpi-health">100%</div>
+                <div class="kpi-label">System Health</div>
+                <div class="kpi-change kpi-up">Optimal</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">⏱️</div>
+                <div class="kpi-value" id="kpi-downtime">0h</div>
+                <div class="kpi-label">Downtime</div>
+                <div class="kpi-change kpi-up">No Issues</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">⚠️</div>
+                <div class="kpi-value" id="kpi-risk">Low</div>
+                <div class="kpi-label">Risk Level</div>
+                <div class="kpi-change kpi-up">Stable</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">🎯</div>
+                <div class="kpi-value" id="kpi-efficiency">95%</div>
+                <div class="kpi-label">Efficiency</div>
+                <div class="kpi-change kpi-up">↑ 2%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">📊</div>
+                <div class="kpi-value" id="kpi-production">34.5</div>
+                <div class="kpi-label">Production (t/h)</div>
+                <div class="kpi-change kpi-up">↑ 1.2</div>
+            </div>
+        </div>
+
+        <div class="panel panel-wide">
+            <div class="panel-title">
+                📈 Key Process Variable Trends by Fault
+                <span class="panel-badge">Real-Time Monitoring</span>
+            </div>
+            <div class="trends-grid">
+                <div class="trend-item">
+                    <div class="trend-title">Reactor Pressure</div>
+                    <div class="trend-chart-wrapper">
+                        <canvas id="reactorPressureChart"></canvas>
+                    </div>
+                </div>
+                <div class="trend-item">
+                    <div class="trend-title">Reactor Temperature</div>
+                    <div class="trend-chart-wrapper">
+                        <canvas id="reactorTempChart"></canvas>
+                    </div>
+                </div>
+                <div class="trend-item">
+                    <div class="trend-title">Feed Flow A</div>
+                    <div class="trend-chart-wrapper">
+                        <canvas id="feedFlowAChart"></canvas>
+                    </div>
+                </div>
+                <div class="trend-item">
+                    <div class="trend-title">Separator Pressure</div>
+                    <div class="trend-chart-wrapper">
+                        <canvas id="separatorPressureChart"></canvas>
+                    </div>
+                </div>
+                <div class="trend-item">
+                    <div class="trend-title">Feed Flow C</div>
+                    <div class="trend-chart-wrapper">
+                        <canvas id="feedFlowCChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs-container">
+            <div class="tab active" onclick="switchTab('overview')">📊 Overview</div>
+            <div class="tab" onclick="switchTab('rca')">🔍 Root Cause</div>
+            <div class="tab" onclick="switchTab('risk')">⚠️ Risk Matrix</div>
+            <div class="tab" onclick="switchTab('maintenance')">🔧 Maintenance</div>
+            <div class="tab" onclick="switchTab('catalog')">📋 Fault Catalog</div>
+        </div>
+
+        <div id="overview" class="tab-content active">
+            <div class="dashboard-grid">
+                <div class="panel">
+                    <div class="panel-title">
+                        System Performance
+                        <span class="panel-badge">Live</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">
+                        Cost Analysis
+                        <span class="panel-badge">Updated</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="rca" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="panel">
+                    <div class="panel-title">Root Cause Details</div>
+                    <div id="rcaDetails" style="padding: 20px; color: var(--text-muted);">
+                        Select a fault to view root cause analysis...
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">Affected Variables</div>
+                    <div class="chart-container">
+                        <canvas id="affectedVarsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="risk" class="tab-content">
+            <div class="panel panel-wide">
+                <div class="panel-title">
+                    5x5 Risk Assessment Matrix
+                    <span class="panel-badge">Current State</span>
+                </div>
+                <div class="risk-matrix" id="riskMatrix"></div>
+                <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px;">
+                    <p style="color: var(--text-muted); margin-bottom: 10px;">Click on any cell to see risk details. Current fault is marked with a white indicator.</p>
+                    <div id="riskDetails" style="color: white; margin-top: 10px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="maintenance" class="tab-content">
+            <div class="panel panel-wide">
+                <div class="panel-title">Maintenance Schedule</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Duration</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maintenanceBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="catalog" class="tab-content">
+            <div class="panel panel-wide">
+                <div class="panel-title">
+                    Complete Fault Documentation
+                    <span class="panel-badge">Reference</span>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Severity</th>
+                            <th>Cost</th>
+                            <th>Downtime</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="catalogTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const faultDB = {
+            0: {
+                name: 'Normal Operation',
+                description: 'All systems operating within normal parameters',
+                root_cause: 'No faults detected - System stable',
+                urgency: 'None',
+                cost_impact: 0,
+                estimated_downtime: 0,
+                maintenance_action: 'Continue routine monitoring',
+                affected_variables: ['None'],
+                system_health: 100,
+                performance: [95, 98, 100, 97, 99],
+                risk: {likelihood: 1, impact: 1},
+                sensor_deviations: [0, 0, 0, 0, 0],
+                trend_degradation: 0,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + Math.random() * 20 - 10),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + Math.random() * 2 - 1),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.2 - 0.1),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + Math.random() * 30 - 15),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.1 - 0.05)
+                }
+            },
+            1: {
+                name: 'A/C Feed Ratio Step Change',
+                description: 'Step change in A/C feed ratio in Stream 4',
+                root_cause: 'Feed composition controller malfunction',
+                urgency: 'Critical',
+                cost_impact: 45000,
+                estimated_downtime: 8,
+                maintenance_action: 'Recalibrate feed ratio controller',
+                affected_variables: ['A Feed', 'C Feed', 'Product Composition', 'Reactor Pressure', 'Stripper Level'],
+                system_health: 65,
+                performance: [75, 82, 85, 78, 80],
+                risk: {likelihood: 4, impact: 4},
+                sensor_deviations: [30, 25, 15, 20, 18],
+                trend_degradation: 3,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map((_, i) => 3102 + i * 15 + Math.random() * 30),
+                    reactor_temp: Array(24).fill(0).map((_, i) => 85.7 + i * 0.8 + Math.random() * 3),
+                    feed_flow_a: Array(24).fill(0).map((_, i) => 7.5 - i * 0.15 + Math.random() * 0.5),
+                    separator_pressure: Array(24).fill(0).map((_, i) => 2800 + i * 8 + Math.random() * 40),
+                    feed_flow_c: Array(24).fill(0).map((_, i) => 3.2 + i * 0.05 + Math.random() * 0.2)
+                }
+            },
+            2: {
+                name: 'B Composition Step',
+                description: 'B composition constant (stream 4), step change',
+                root_cause: 'Feed quality issue or supplier problem',
+                urgency: 'High',
+                cost_impact: 38000,
+                estimated_downtime: 7,
+                maintenance_action: 'Check feed quality and adjust controllers',
+                affected_variables: ['B Feed', 'Product Quality', 'Reactor Balance'],
+                system_health: 70,
+                performance: [78, 85, 87, 82, 84],
+                risk: {likelihood: 3, impact: 4},
+                sensor_deviations: [25, 22, 18, 15, 20],
+                trend_degradation: 2.5,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map((_, i) => 3102 + i * 12 + Math.random() * 25),
+                    reactor_temp: Array(24).fill(0).map((_, i) => 85.7 + i * 0.6 + Math.random() * 2.5),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.3),
+                    separator_pressure: Array(24).fill(0).map((_, i) => 2800 + i * 10 + Math.random() * 35),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.15)
+                }
+            },
+            3: {
+                name: 'D Feed Temperature Step',
+                description: 'D feed temperature (stream 2) step change',
+                root_cause: 'Heat exchanger fouling or control valve issue',
+                urgency: 'Medium',
+                cost_impact: 28000,
+                estimated_downtime: 5,
+                maintenance_action: 'Clean heat exchanger and check valve',
+                affected_variables: ['D Feed Temp', 'Reactor Temp', 'Conversion'],
+                system_health: 75,
+                performance: [82, 87, 89, 85, 86],
+                risk: {likelihood: 3, impact: 3},
+                sensor_deviations: [20, 18, 15, 12, 16],
+                trend_degradation: 2,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map((_, i) => 3102 + i * 8 + Math.random() * 20),
+                    reactor_temp: Array(24).fill(0).map((_, i) => 85.7 + i * 0.5 + Math.random() * 2),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.25),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + Math.random() * 30),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.12)
+                }
+            },
+            4: {
+                name: 'Reactor Cooling Water Inlet Temperature',
+                description: 'Step change in reactor cooling water inlet temperature',
+                root_cause: 'Cooling tower performance degradation',
+                urgency: 'Critical',
+                cost_impact: 52000,
+                estimated_downtime: 10,
+                maintenance_action: 'Service cooling tower system',
+                affected_variables: ['Reactor Temp', 'Product Quality', 'Reaction Rate', 'Safety Systems', 'Pressure'],
+                system_health: 60,
+                performance: [70, 78, 82, 75, 77],
+                risk: {likelihood: 4, impact: 5},
+                sensor_deviations: [35, 28, 40, 32, 30],
+                trend_degradation: 3.5,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map((_, i) => 3102 + i * 20 + Math.random() * 40),
+                    reactor_temp: Array(24).fill(0).map((_, i) => 85.7 + i * 1.5 + Math.random() * 5),
+                    feed_flow_a: Array(24).fill(0).map((_, i) => 7.5 - i * 0.1 + Math.random() * 0.4),
+                    separator_pressure: Array(24).fill(0).map((_, i) => 2800 + i * 12 + Math.random() * 50),
+                    feed_flow_c: Array(24).fill(0).map((_, i) => 3.2 - i * 0.02 + Math.random() * 0.18)
+                }
+            },
+            5: {
+                name: 'Condenser Cooling Water Inlet Temperature',
+                description: 'Step change in condenser cooling water inlet temperature',
+                root_cause: 'Cooling water supply issue',
+                urgency: 'High',
+                cost_impact: 35000,
+                estimated_downtime: 6,
+                maintenance_action: 'Check cooling water supply system',
+                affected_variables: ['Condenser Temp', 'Separation', 'Product Purity'],
+                system_health: 72,
+                performance: [80, 85, 88, 83, 84],
+                risk: {likelihood: 3, impact: 4},
+                sensor_deviations: [22, 20, 18, 25, 21],
+                trend_degradation: 2.3,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + Math.random() * 25),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + Math.random() * 3),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.3),
+                    separator_pressure: Array(24).fill(0).map((_, i) => 2800 + i * 5 + Math.random() * 35),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.15)
+                }
+            },
+            6: {
+                name: 'A Feed Loss (Stream 1)',
+                description: 'A feed loss in Stream 1',
+                root_cause: 'Feed valve stuck closed',
+                urgency: 'Critical',
+                cost_impact: 65000,
+                estimated_downtime: 12,
+                maintenance_action: 'Emergency valve replacement',
+                affected_variables: ['A Feed Flow', 'Production Rate', 'Reactor Balance', 'Economic Loss', 'Safety'],
+                system_health: 55,
+                performance: [65, 72, 78, 70, 73],
+                risk: {likelihood: 5, impact: 5},
+                sensor_deviations: [45, 38, 35, 28, 32],
+                trend_degradation: 4,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map((_, i) => 3102 - i * 25 + Math.random() * 45),
+                    reactor_temp: Array(24).fill(0).map((_, i) => 85.7 - i * 0.8 + Math.random() * 3),
+                    feed_flow_a: Array(24).fill(0).map((_, i) => Math.max(0, 7.5 - i * 0.6)),
+                    separator_pressure: Array(24).fill(0).map((_, i) => 2800 - i * 15 + Math.random() * 40),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.08)
+                }
+            },
+            7: {
+                name: 'C Header Pressure Loss',
+                description: 'C header pressure loss - reduced availability',
+                root_cause: 'Header valve malfunction or line blockage',
+                urgency: 'High',
+                cost_impact: 42000,
+                estimated_downtime: 8,
+                maintenance_action: 'Inspect and clear C header line',
+                affected_variables: ['C Feed', 'Header Pressure', 'Flow Distribution'],
+                system_health: 68,
+                performance: [76, 82, 84, 79, 81],
+                risk: {likelihood: 3, impact: 4},
+                sensor_deviations: [28, 24, 22, 19, 23],
+                trend_degradation: 2.8,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map((_, i) => 3102 - i * 10 + Math.random() * 30),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + Math.random() * 2.5),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.35),
+                    separator_pressure: Array(24).fill(0).map((_, i) => 2800 - i * 8 + Math.random() * 40),
+                    feed_flow_c: Array(24).fill(0).map((_, i) => 3.2 - i * 0.08 + Math.random() * 0.2)
+                }
+            },
+            8: {
+                name: 'A, B, C Feed Composition',
+                description: 'Random variation in A, B, C feed composition',
+                root_cause: 'Feed supply quality variations',
+                urgency: 'Medium',
+                cost_impact: 25000,
+                estimated_downtime: 4,
+                maintenance_action: 'Adjust feed blending system',
+                affected_variables: ['Feed Composition', 'Product Quality'],
+                system_health: 78,
+                performance: [84, 88, 90, 86, 87],
+                risk: {likelihood: 2, impact: 3},
+                sensor_deviations: [15, 18, 14, 16, 13],
+                trend_degradation: 1.8,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + (Math.random() - 0.5) * 35),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + (Math.random() - 0.5) * 3.5),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + (Math.random() - 0.5) * 0.6),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + (Math.random() - 0.5) * 45),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + (Math.random() - 0.5) * 0.3)
+                }
+            },
+            9: {
+                name: 'D Feed Temperature',
+                description: 'Random variation in D feed temperature',
+                root_cause: 'Temperature control instability',
+                urgency: 'Low',
+                cost_impact: 18000,
+                estimated_downtime: 3,
+                maintenance_action: 'Tune temperature controller',
+                affected_variables: ['D Feed Temp', 'Reactor Stability'],
+                system_health: 82,
+                performance: [87, 90, 92, 88, 89],
+                risk: {likelihood: 2, impact: 2},
+                sensor_deviations: [12, 10, 11, 13, 9],
+                trend_degradation: 1.3,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + (Math.random() - 0.5) * 25),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + (Math.random() - 0.5) * 2.8),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.2),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + Math.random() * 35),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.1)
+                }
+            },
+            10: {
+                name: 'C Feed Temperature',
+                description: 'Random variation in C feed temperature',
+                root_cause: 'Heat exchanger performance variation',
+                urgency: 'Low',
+                cost_impact: 20000,
+                estimated_downtime: 3,
+                maintenance_action: 'Service heat exchanger',
+                affected_variables: ['C Feed Temp', 'Energy Balance'],
+                system_health: 80,
+                performance: [85, 88, 91, 87, 88],
+                risk: {likelihood: 2, impact: 2},
+                sensor_deviations: [14, 11, 12, 10, 13],
+                trend_degradation: 1.5,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + Math.random() * 22),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + (Math.random() - 0.5) * 2.5),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.25),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + Math.random() * 32),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + (Math.random() - 0.5) * 0.2)
+                }
+            },
+            11: {
+                name: 'Reactor Cooling Water Temperature',
+                description: 'Random variation in reactor cooling water inlet temperature',
+                root_cause: 'Cooling system control instability',
+                urgency: 'Medium',
+                cost_impact: 30000,
+                estimated_downtime: 5,
+                maintenance_action: 'Stabilize cooling water control',
+                affected_variables: ['Reactor Temp Control', 'Product Consistency'],
+                system_health: 73,
+                performance: [79, 84, 86, 81, 83],
+                risk: {likelihood: 3, impact: 3},
+                sensor_deviations: [20, 17, 19, 21, 18],
+                trend_degradation: 2.1,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + (Math.random() - 0.5) * 40),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + (Math.random() - 0.5) * 4),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.3),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + (Math.random() - 0.5) * 50),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.15)
+                }
+            },
+            12: {
+                name: 'Condenser Cooling Water Temperature',
+                description: 'Random variation in condenser cooling water inlet temperature',
+                root_cause: 'Cooling water supply fluctuations',
+                urgency: 'Medium',
+                cost_impact: 27000,
+                estimated_downtime: 4,
+                maintenance_action: 'Stabilize cooling water supply',
+                affected_variables: ['Condenser Performance', 'Separation Efficiency'],
+                system_health: 76,
+                performance: [81, 86, 88, 83, 85],
+                risk: {likelihood: 2, impact: 3},
+                sensor_deviations: [18, 15, 16, 19, 14],
+                trend_degradation: 1.9,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + Math.random() * 28),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + Math.random() * 2.2),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.28),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + (Math.random() - 0.5) * 38),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.13)
+                }
+            },
+            13: {
+                name: 'Reaction Kinetics Drift',
+                description: 'Slow drift in reaction kinetics',
+                root_cause: 'Catalyst aging and deactivation',
+                urgency: 'High',
+                cost_impact: 32000,
+                estimated_downtime: 6,
+                maintenance_action: 'Schedule catalyst regeneration',
+                affected_variables: ['Reaction Rate', 'Conversion', 'Selectivity', 'Product Distribution', 'Temperature'],
+                system_health: 74,
+                performance: [81, 86, 89, 83, 85],
+                risk: {likelihood: 3, impact: 3},
+                sensor_deviations: [20, 25, 22, 18, 28],
+                trend_degradation: 2.2,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map((_, i) => 3102 + i * 8 + Math.random() * 25),
+                    reactor_temp: Array(24).fill(0).map((_, i) => 85.7 + i * 0.5 + Math.random() * 2.8),
+                    feed_flow_a: Array(24).fill(0).map((_, i) => 7.5 - i * 0.05 + Math.random() * 0.35),
+                    separator_pressure: Array(24).fill(0).map((_, i) => 2800 + i * 7 + Math.random() * 35),
+                    feed_flow_c: Array(24).fill(0).map((_, i) => 3.2 + i * 0.02 + Math.random() * 0.14)
+                }
+            },
+            14: {
+                name: 'Reactor Cooling Water Valve Sticking',
+                description: 'Reactor cooling water valve sticking',
+                root_cause: 'Valve mechanical failure or fouling',
+                urgency: 'Critical',
+                cost_impact: 48000,
+                estimated_downtime: 9,
+                maintenance_action: 'Replace or repair cooling water valve',
+                affected_variables: ['Cooling Control', 'Reactor Temp', 'Safety'],
+                system_health: 62,
+                performance: [72, 79, 83, 76, 78],
+                risk: {likelihood: 4, impact: 4},
+                sensor_deviations: [32, 30, 28, 35, 29],
+                trend_degradation: 3.2,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map((_, i) => 3102 + Math.abs(Math.sin(i/4)) * 50 + Math.random() * 20),
+                    reactor_temp: Array(24).fill(0).map((_, i) => 85.7 + Math.abs(Math.sin(i/4)) * 8 + Math.random() * 2),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.4),
+                    separator_pressure: Array(24).fill(0).map((_, i) => 2800 + Math.abs(Math.sin(i/4)) * 30 + Math.random() * 25),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.16)
+                }
+            },
+            15: {
+                name: 'Condenser Cooling Water Valve Sticking',
+                description: 'Condenser cooling water valve sticking',
+                root_cause: 'Valve actuator failure',
+                urgency: 'High',
+                cost_impact: 40000,
+                estimated_downtime: 7,
+                maintenance_action: 'Repair valve actuator',
+                affected_variables: ['Condenser Control', 'Product Quality'],
+                system_health: 69,
+                performance: [77, 83, 86, 80, 82],
+                risk: {likelihood: 3, impact: 4},
+                sensor_deviations: [26, 23, 24, 27, 22],
+                trend_degradation: 2.6,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + Math.random() * 30),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + Math.random() * 3.2),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.32),
+                    separator_pressure: Array(24).fill(0).map((_, i) => 2800 + Math.abs(Math.sin(i/5)) * 40 + Math.random() * 20),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.17)
+                }
+            },
+            16: {
+                name: 'Unknown Fault',
+                description: 'Unknown disturbance type 1',
+                root_cause: 'Under investigation',
+                urgency: 'Medium',
+                cost_impact: 22000,
+                estimated_downtime: 4,
+                maintenance_action: 'Investigate and diagnose',
+                affected_variables: ['Multiple Variables'],
+                system_health: 77,
+                performance: [83, 87, 89, 85, 86],
+                risk: {likelihood: 2, impact: 3},
+                sensor_deviations: [16, 14, 15, 17, 13],
+                trend_degradation: 1.7,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + (Math.random() - 0.5) * 32),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + (Math.random() - 0.5) * 2.7),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + (Math.random() - 0.5) * 0.45),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + (Math.random() - 0.5) * 42),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + (Math.random() - 0.5) * 0.22)
+                }
+            },
+            17: {
+                name: 'Unknown Fault',
+                description: 'Unknown disturbance type 2',
+                root_cause: 'Under investigation',
+                urgency: 'Medium',
+                cost_impact: 24000,
+                estimated_downtime: 4,
+                maintenance_action: 'Investigate and diagnose',
+                affected_variables: ['Multiple Variables'],
+                system_health: 75,
+                performance: [82, 86, 88, 84, 85],
+                risk: {likelihood: 2, impact: 3},
+                sensor_deviations: [17, 15, 16, 18, 14],
+                trend_degradation: 1.8,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + (Math.random() - 0.5) * 34),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + (Math.random() - 0.5) * 2.9),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + (Math.random() - 0.5) * 0.48),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + (Math.random() - 0.5) * 44),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + (Math.random() - 0.5) * 0.24)
+                }
+            },
+            18: {
+                name: 'Unknown Fault',
+                description: 'Unknown disturbance type 3',
+                root_cause: 'Under investigation',
+                urgency: 'Low',
+                cost_impact: 19000,
+                estimated_downtime: 3,
+                maintenance_action: 'Monitor and investigate',
+                affected_variables: ['Various'],
+                system_health: 79,
+                performance: [84, 88, 90, 86, 87],
+                risk: {likelihood: 2, impact: 2},
+                sensor_deviations: [13, 11, 12, 14, 10],
+                trend_degradation: 1.4,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + Math.random() * 26),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + Math.random() * 2.3),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.27),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + Math.random() * 34),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.12)
+                }
+            },
+            19: {
+                name: 'Unknown Fault',
+                description: 'Unknown disturbance type 4',
+                root_cause: 'Under investigation',
+                urgency: 'Low',
+                cost_impact: 21000,
+                estimated_downtime: 3,
+                maintenance_action: 'Monitor and investigate',
+                affected_variables: ['Various'],
+                system_health: 78,
+                performance: [83, 87, 89, 85, 86],
+                risk: {likelihood: 2, impact: 2},
+                sensor_deviations: [14, 12, 13, 15, 11],
+                trend_degradation: 1.5,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + Math.random() * 27),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + Math.random() * 2.4),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + Math.random() * 0.29),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + Math.random() * 36),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + Math.random() * 0.13)
+                }
+            },
+            20: {
+                name: 'Unknown Fault',
+                description: 'Unknown disturbance type 5',
+                root_cause: 'Under investigation',
+                urgency: 'Medium',
+                cost_impact: 26000,
+                estimated_downtime: 5,
+                maintenance_action: 'Comprehensive system check',
+                affected_variables: ['Multiple Systems'],
+                system_health: 74,
+                performance: [80, 85, 87, 82, 84],
+                risk: {likelihood: 3, impact: 3},
+                sensor_deviations: [19, 16, 18, 20, 15],
+                trend_degradation: 2,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + (Math.random() - 0.5) * 36),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + (Math.random() - 0.5) * 3.1),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5 + (Math.random() - 0.5) * 0.5),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + (Math.random() - 0.5) * 46),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2 + (Math.random() - 0.5) * 0.26)
+                }
+            },
+            21: {
+                name: 'Stream 4 Valve Fixed Position',
+                description: 'The valve for Stream 4 was fixed at the steady state position',
+                root_cause: 'Valve control system failure - stuck at fixed position',
+                urgency: 'High',
+                cost_impact: 37000,
+                estimated_downtime: 7,
+                maintenance_action: 'Repair valve control system',
+                affected_variables: ['Stream 4 Flow', 'Feed Control', 'Product Quality'],
+                system_health: 71,
+                performance: [78, 84, 86, 81, 83],
+                risk: {likelihood: 3, impact: 4},
+                sensor_deviations: [24, 21, 23, 25, 20],
+                trend_degradation: 2.4,
+                process_vars: {
+                    reactor_pressure: Array(24).fill(0).map(() => 3102 + 15 + Math.random() * 10),
+                    reactor_temp: Array(24).fill(0).map(() => 85.7 + 1.5 + Math.random() * 1),
+                    feed_flow_a: Array(24).fill(0).map(() => 7.5),
+                    separator_pressure: Array(24).fill(0).map(() => 2800 + 20 + Math.random() * 15),
+                    feed_flow_c: Array(24).fill(0).map(() => 3.2)
+                }
+            }
+        };
+
+        let charts = {};
+        let currentFault = 0;
+
+        function initDashboard() {
+            buildRiskMatrix();
+            initCharts();
+            populateFaultCatalog();
+            updateDashboard();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function buildRiskMatrix() {
+            const container = document.getElementById('riskMatrix');
+            const consequences = ['', 'Rare', 'Unlikely', 'Possible', 'Likely', 'Almost Certain'];
+            const likelihood = ['', 'Minor', 'Moderate', 'Serious', 'Major', 'Catastrophic'];
+
+            container.innerHTML = '';
+
+            for (let i = 0; i < 6; i++) {
+                for (let j = 0; j < 6; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'risk-cell';
+
+                    if (i === 0 && j === 0) {
+                        // Empty corner
+                    } else if (i === 0) {
+                        cell.className += ' risk-header';
+                        cell.textContent = consequences[j];
+                    } else if (j === 0) {
+                        cell.className += ' risk-header';
+                        cell.textContent = likelihood[i];
+                    } else {
+                        const riskLevel = Math.max(i, j);
+                        cell.className += ' risk-' + riskLevel;
+                        cell.id = `risk-${i}-${j}`;
+                        cell.onclick = function() {
+                            selectRiskCell(i, j);
+                        };
+                    }
+
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        function selectRiskCell(row, col) {
+            // Remove previous selections
+            document.querySelectorAll('.risk-cell').forEach(cell => {
+                cell.classList.remove('risk-selected');
+            });
+
+            // Add selection to clicked cell
+            const cell = document.getElementById(`risk-${row}-${col}`);
+            if (cell) {
+                cell.classList.add('risk-selected');
+
+                // Update risk details
+                const likelihood = ['', 'Rare', 'Unlikely', 'Possible', 'Likely', 'Almost Certain'][col];
+                const impact = ['', 'Minor', 'Moderate', 'Serious', 'Major', 'Catastrophic'][row];
+                const riskLevel = Math.max(row, col);
+                const riskLevels = ['', 'Very Low', 'Low', 'Medium', 'High', 'Critical'];
+
+                document.getElementById('riskDetails').innerHTML = `
+                    <strong>Risk Assessment:</strong><br>
+                    Likelihood: ${likelihood}<br>
+                    Impact: ${impact}<br>
+                    Risk Level: ${riskLevels[riskLevel]}
+                `;
+            }
+        }
+
+        function updateRiskMatrix(faultId) {
+            // Clear all fault markers
+            document.querySelectorAll('.risk-fault-marker').forEach(marker => {
+                marker.remove();
+            });
+
+            const fault = faultDB[faultId];
+            if (fault && fault.risk) {
+                const cell = document.getElementById(`risk-${fault.risk.impact}-${fault.risk.likelihood}`);
+                if (cell) {
+                    cell.classList.add('risk-selected');
+                    const marker = document.createElement('div');
+                    marker.className = 'risk-fault-marker';
+                    marker.textContent = 'F' + faultId;
+                    cell.appendChild(marker);
+                }
+            }
+        }
+
+        function initCharts() {
+            Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+            Chart.defaults.color = 'rgba(255, 255, 255, 0.8)';
+
+            charts.performance = new Chart(document.getElementById('performanceChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Efficiency', 'Reliability', 'Safety', 'Quality', 'Availability'],
+                    datasets: [{
+                        label: 'Primary Fault',
+                        data: [95, 98, 100, 97, 99],
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: 'rgba(255, 255, 255, 0.7)', callback: (value) => value + '%' },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        },
+                        x: {
+                            ticks: { color: 'rgba(255, 255, 255, 0.7)' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            charts.cost = new Chart(document.getElementById('costChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['No Impact'],
+                    datasets: [{
+                        data: [100],
+                        backgroundColor: ['rgba(16, 185, 129, 0.8)'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: 'rgba(255, 255, 255, 0.7)' } }
+                    }
+                }
+            });
+
+            const trendOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            font: { size: 9 },
+                            maxTicksLimit: 4
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            font: { size: 9 },
+                            maxRotation: 0,
+                            callback: function(val, index) { return index % 6 === 0 ? index + 'h' : ''; }
+                        },
+                        grid: { display: false }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                elements: {
+                    point: {
+                        radius: 0,
+                        hitRadius: 10,
+                        hoverRadius: 3
+                    }
+                }
+            };
+
+            charts.reactorPressure = new Chart(document.getElementById('reactorPressureChart'), {
+                type: 'line',
+                data: {
+                    labels: Array(24).fill(0).map((_, i) => i),
+                    datasets: [{
+                        data: Array(24).fill(3102),
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 0
+                    }]
+                },
+                options: trendOptions
+            });
+
+            charts.reactorTemp = new Chart(document.getElementById('reactorTempChart'), {
+                type: 'line',
+                data: {
+                    labels: Array(24).fill(0).map((_, i) => i),
+                    datasets: [{
+                        data: Array(24).fill(85.7),
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 0
+                    }]
+                },
+                options: trendOptions
+            });
+
+            charts.feedFlowA = new Chart(document.getElementById('feedFlowAChart'), {
+                type: 'line',
+                data: {
+                    labels: Array(24).fill(0).map((_, i) => i),
+                    datasets: [{
+                        data: Array(24).fill(7.5),
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 0
+                    }]
+                },
+                options: trendOptions
+            });
+
+            charts.separatorPressure = new Chart(document.getElementById('separatorPressureChart'), {
+                type: 'line',
+                data: {
+                    labels: Array(24).fill(0).map((_, i) => i),
+                    datasets: [{
+                        data: Array(24).fill(2800),
+                        borderColor: 'rgba(147, 51, 234, 1)',
+                        backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 0
+                    }]
+                },
+                options: trendOptions
+            });
+
+            charts.feedFlowC = new Chart(document.getElementById('feedFlowCChart'), {
+                type: 'line',
+                data: {
+                    labels: Array(24).fill(0).map((_, i) => i),
+                    datasets: [{
+                        data: Array(24).fill(3.2),
+                        borderColor: 'rgba(245, 158, 11, 1)',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 0
+                    }]
+                },
+                options: trendOptions
+            });
+
+            charts.affectedVars = new Chart(document.getElementById('affectedVarsChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['None'],
+                    datasets: [{
+                        data: [0],
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: 'rgba(255, 255, 255, 0.7)', callback: (value) => value + '%' },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        },
+                        y: {
+                            ticks: { color: 'rgba(255, 255, 255, 0.7)' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDashboard() {
+            const fault1Id = parseInt(document.getElementById('fault1').value);
+            const fault2Id = parseInt(document.getElementById('fault2').value);
+            const fault = faultDB[fault1Id] || faultDB[0];
+
+            document.getElementById('kpi-cost').textContent = '$' + fault.cost_impact.toLocaleString();
+            document.getElementById('kpi-health').textContent = fault.system_health + '%';
+            document.getElementById('kpi-downtime').textContent = fault.estimated_downtime + 'h';
+            document.getElementById('kpi-risk').textContent = fault.urgency || 'Low';
+            document.getElementById('kpi-efficiency').textContent = fault.performance[0] + '%';
+
+            const costChange = document.getElementById('cost-change');
+            if (fault.cost_impact > 0) {
+                costChange.textContent = '↑ $' + fault.cost_impact.toLocaleString();
+                costChange.className = 'kpi-change kpi-down';
+            } else {
+                costChange.textContent = 'Normal';
+                costChange.className = 'kpi-change kpi-up';
+            }
+
+            updateProcessDiagram(fault1Id);
+            updateRiskMatrix(fault1Id);
+
+            if (fault2Id >= 0) {
+                const fault2 = faultDB[fault2Id];
+                charts.performance.data.datasets = [
+                    {
+                        label: 'Primary: ' + fault.name,
+                        data: fault.performance,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderRadius: 8
+                    },
+                    {
+                        label: 'Secondary: ' + fault2.name,
+                        data: fault2.performance,
+                        backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                        borderRadius: 8
+                    }
+                ];
+            } else {
+                charts.performance.data.datasets = [{
+                    label: fault.name,
+                    data: fault.performance,
+                    backgroundColor: fault.performance.map(v =>
+                        v < 80 ? 'rgba(239, 68, 68, 0.8)' :
+                        v < 90 ? 'rgba(245, 158, 11, 0.8)' :
+                        'rgba(16, 185, 129, 0.8)'
+                    ),
+                    borderRadius: 8
+                }];
+            }
+            charts.performance.update();
+
+            if (fault.cost_impact > 0) {
+                charts.cost.data.labels = ['Labor', 'Parts', 'Downtime', 'Other'];
+                charts.cost.data.datasets[0].data = [
+                    fault.cost_impact * 0.35,
+                    fault.cost_impact * 0.25,
+                    fault.cost_impact * 0.30,
+                    fault.cost_impact * 0.10
+                ];
+                charts.cost.data.datasets[0].backgroundColor = [
+                    'rgba(239, 68, 68, 0.8)',
+                    'rgba(245, 158, 11, 0.8)',
+                    'rgba(102, 126, 234, 0.8)',
+                    'rgba(16, 185, 129, 0.8)'
+                ];
+            } else {
+                charts.cost.data.labels = ['No Impact'];
+                charts.cost.data.datasets[0].data = [100];
+                charts.cost.data.datasets[0].backgroundColor = ['rgba(16, 185, 129, 0.8)'];
+            }
+            charts.cost.update();
+
+            updateVariableTrends(fault);
+            updateRCADetails(fault);
+            updateMaintenanceTable(fault);
+        }
+
+        function updateProcessDiagram(faultId) {
+            document.getElementById('reactorShape').setAttribute('fill', 'url(#reactorGrad)');
+            document.getElementById('condenserShape').setAttribute('fill', 'url(#condenserGrad)');
+            document.getElementById('separatorShape').setAttribute('fill', 'url(#separatorGrad)');
+
+            if (faultId > 0) {
+                if ([1, 2, 3, 4, 11, 13, 14].includes(faultId)) {
+                    document.getElementById('reactorShape').setAttribute('fill', 'url(#faultGrad)');
+                }
+                if ([5, 12, 15].includes(faultId)) {
+                    document.getElementById('condenserShape').setAttribute('fill', 'url(#faultGrad)');
+                }
+                if ([2, 7].includes(faultId)) {
+                    document.getElementById('separatorShape').setAttribute('fill', 'url(#faultGrad)');
+                }
+            }
+
+            const statusElement = document.querySelector('#statusText tspan');
+            const fault = faultDB[faultId];
+            if (statusElement) {
+                statusElement.textContent = fault.urgency === 'None' ? 'NORMAL' :
+                                          fault.urgency === 'Critical' ? 'CRITICAL' :
+                                          fault.urgency === 'High' ? 'WARNING' : 'CAUTION';
+                statusElement.setAttribute('fill',
+                    fault.urgency === 'None' ? '#10b981' :
+                    fault.urgency === 'Critical' ? '#ef4444' :
+                    fault.urgency === 'High' ? '#f59e0b' : '#3b82f6'
+                );
+            }
+        }
+
+        function updateVariableTrends(fault) {
+            if (fault.process_vars) {
+                charts.reactorPressure.data.datasets[0].data = fault.process_vars.reactor_pressure;
+                charts.reactorPressure.update();
+
+                charts.reactorTemp.data.datasets[0].data = fault.process_vars.reactor_temp;
+                charts.reactorTemp.update();
+
+                charts.feedFlowA.data.datasets[0].data = fault.process_vars.feed_flow_a;
+                charts.feedFlowA.update();
+
+                charts.separatorPressure.data.datasets[0].data = fault.process_vars.separator_pressure;
+                charts.separatorPressure.update();
+
+                charts.feedFlowC.data.datasets[0].data = fault.process_vars.feed_flow_c;
+                charts.feedFlowC.update();
+            }
+        }
+
+        function updateRCADetails(fault) {
+            const details = document.getElementById('rcaDetails');
+            details.innerHTML = `
+                <h4 style="color: white; margin-bottom: 15px;">${fault.name}</h4>
+                <div style="margin-bottom: 10px;"><strong>Description:</strong> ${fault.description}</div>
+                <div style="margin-bottom: 10px;"><strong>Root Cause:</strong> ${fault.root_cause}</div>
+                <div style="margin-bottom: 10px;"><strong>Severity:</strong> <span class="severity-${fault.urgency ? fault.urgency.toLowerCase() : 'low'}">${fault.urgency || 'Low'}</span></div>
+                <div style="margin-bottom: 10px;"><strong>Action:</strong> ${fault.maintenance_action}</div>
+                <div style="margin-top: 20px; padding: 15px; background: rgba(102, 126, 234, 0.2); border-radius: 10px;">
+                    <strong>Cost Impact:</strong> $${fault.cost_impact.toLocaleString()}<br>
+                    <strong>Est. Downtime:</strong> ${fault.estimated_downtime} hours<br>
+                    <strong>System Health:</strong> ${fault.system_health}%
+                </div>
+            `;
+
+            if (charts.affectedVars) {
+                const vars = fault.affected_variables.slice(0, 5);
+                const impacts = vars.map((_, i) => fault.cost_impact > 0 ? Math.max(30, 95 - i * 15) : 0);
+                charts.affectedVars.data.labels = vars;
+                charts.affectedVars.data.datasets[0].data = impacts;
+                charts.affectedVars.data.datasets[0].backgroundColor = impacts.map(v =>
+                    v > 70 ? 'rgba(239, 68, 68, 0.8)' :
+                    v > 40 ? 'rgba(245, 158, 11, 0.8)' :
+                    v > 0 ? 'rgba(251, 191, 36, 0.8)' :
+                    'rgba(16, 185, 129, 0.8)'
+                );
+                charts.affectedVars.update();
+            }
+        }
+
+        function updateMaintenanceTable(fault) {
+            const tbody = document.getElementById('maintenanceBody');
+            tbody.innerHTML = '';
+
+            const tasks = fault.cost_impact > 0 ?
+                ['Detection', 'Diagnosis', 'Repair', 'Testing'] :
+                ['Routine Check', 'Monitoring', 'Reporting', 'Documentation'];
+
+            const durations = fault.cost_impact > 0 ?
+                ['15min', '1hr', `${Math.max(1, fault.estimated_downtime - 2)}hr`, '30min'] :
+                ['30min', '1hr', '15min', '15min'];
+
+            const priorities = fault.urgency === 'Critical' ? ['Critical', 'Critical', 'Critical', 'High'] :
+                              fault.urgency === 'High' ? ['High', 'High', 'High', 'Medium'] :
+                              ['Low', 'Low', 'Low', 'Low'];
+
+            for (let i = 0; i < tasks.length; i++) {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = tasks[i];
+                row.insertCell(1).textContent = durations[i];
+                row.insertCell(2).innerHTML = `<span class="severity-${priorities[i].toLowerCase()}">${priorities[i]}</span>`;
+                row.insertCell(3).textContent = i === 0 ? '✅ Complete' : i === 1 ? '🔄 In Progress' : '⏳ Pending';
+            }
+        }
+
+        function populateFaultCatalog() {
+            const tbody = document.getElementById('catalogTableBody');
+            tbody.innerHTML = '';
+
+            for (let i = 0; i <= 21; i++) {
+                const fault = faultDB[i];
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>F${i}</td>
+                    <td>${fault.name}</td>
+                    <td><span class="severity-${fault.urgency ? fault.urgency.toLowerCase() : 'low'}">${fault.urgency || 'Low'}</span></td>
+                    <td>$${fault.cost_impact.toLocaleString()}</td>
+                    <td>${fault.estimated_downtime}h</td>
+                    <td>${fault.maintenance_action}</td>
+                `;
+            }
+        }
+
+        function exportReport() {
+            const fault1Id = parseInt(document.getElementById('fault1').value);
+            const report = {
+                timestamp: new Date().toISOString(),
+                fault: faultDB[fault1Id],
+                metrics: {
+                    cost: faultDB[fault1Id].cost_impact,
+                    health: faultDB[fault1Id].system_health,
+                    downtime: faultDB[fault1Id].estimated_downtime
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `TEP_Report_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        function resetDashboard() {
+            document.getElementById('fault1').value = '0';
+            document.getElementById('fault2').value = '-1';
+            updateDashboard();
+        }
+
+        window.addEventListener('load', function() {
+            initDashboard();
+        });
+    </script>
+</body>
+</html>
