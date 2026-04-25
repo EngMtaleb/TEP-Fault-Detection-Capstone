@@ -88,7 +88,7 @@ This project leverages a **Chemical Engineering background** to:
 ├── Final_Capstone_Project (1).ipynb   # Main notebook
 ├── README.md
 └── dashboard/
-    └── fault_detection_dashboard.html    # Interactive dashboard
+    └── index.html    # Interactive dashboard
 ```
 
 ---
