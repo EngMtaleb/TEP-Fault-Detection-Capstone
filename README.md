@@ -6,7 +6,7 @@ The original accuracy was inflated and did not measure generalisation.
 
 With a correct run-level split the honest figures are 83.5% accuracy and a 2.11% false alarm rate. And three of the twenty faults turn out to be undetectable — their detection rate equals the false alarm rate, because the disturbed variable is not measured at all. That is an instrumentation limit, not a modelling one.
 
-The corrected analysis is being published separately.
+The corrected analysis is published at [EngMtaleb/TEP](https://github.com/EngMtaleb/TEP).
 
 
 🏭 Fault Detection & Predictive Maintenance
